@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parit Katre | Gameplay Animator</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js Importmap -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #F4F4F2;
+            --surface: #FFFFFF;
+            --text-primary: #0A0A0A;
+            --text-secondary: #555555;
+            --text-dim: #999999;
+            --border: #0A0A0A;
+            --accent: #FF3B00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        body { background-color: var(--bg); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; cursor: none; }
+        a, button, .clickable { cursor: none; }
+
+        /* Custom Cursor */
+        #custom-cursor {
+            position: fixed; top: 0; left: 0; width: 10px; height: 10px;
+            background: var(--accent); border-radius: 50%; z-index: 9999;
+            pointer-events: none; transition: width 0.2s ease, height 0.2s ease, background 0.2s ease, border 0.2s ease;
+            transform: translate(-50%, -50%); mix-blend-mode: difference;
+        }
+        #custom-cursor.hovered { width: 40px; height: 40px; background: transparent; border: 1px solid var(--accent); }
+        #custom-cursor.dragging { width: 20px; height: 20px; background: var(--text-primary); border: 2px solid var(--accent); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--text-primary); }
+
+        /* Loader */
+        #loader {
+            position: fixed; inset: 0; background: var(--bg); color: var(--text-primary);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10000; transition: opacity 0.3s ease, visibility 0.3s ease;
+            font-family: 'JetBrains Mono', monospace; padding: 2rem;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; }
+        .loader-container { width: 100%; max-width: 800px; }
+        .loader-header { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.2rem, 3vw, 2rem); color: var(--text-primary); margin-bottom: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.02em; }
+        .loader-header span { color: var(--accent); } 
+        .loader-progress-bar { width: 100%; height: 4px; background: #ddd; margin-bottom: 1rem; overflow: hidden; }
+        .loader-progress-fill { height: 100%; width: 0%; background: var(--accent); }
+        .loader-logs { font-size: clamp(0.7rem, 1.2vw, 0.9rem); color: var(--text-secondary); line-height: 1.6; height: 80px; overflow: hidden; }
+        .loader-logs p { opacity: 0; transition: opacity 0.1s; }
+        .loader-logs p.visible { opacity: 1; }
+        .loader-percent { font-size: clamp(2.5rem, 6vw, 4rem); color: var(--text-primary); font-weight: 700; margin-top: 1rem; text-align: right; }
+
+        /* Navbar */
+        nav {
+            position: fixed; top: 0; width: 100%; background: var(--bg);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 2.5rem; z-index: 100; border-bottom: 1px solid var(--border);
+        }
+        .nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-primary); text-decoration: none; letter-spacing: -0.5px; text-transform: uppercase; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-primary); text-decoration: none; font-weight: 500; transition: color 0.2s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-links a:hover { color: var(--accent); }
+
+        /* Hero */
+        #hero { position: relative; height: 90vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 2.5rem 4rem 2.5rem; overflow: hidden; border-bottom: 1px solid var(--border); }
+        #three-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 1; pointer-events: none; }
+        .hero-overlay { position: relative; z-index: 2; width: 100%; }
+        .hero-tag { display: inline-block; padding: 8px 16px; background: var(--text-primary); color: var(--bg); font-size: 0.75rem; font-weight: 600; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 2px; border-radius: 100px; }
+        .hero-overlay h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(4rem, 12vw, 12rem); font-weight: 700; letter-spacing: -0.05em; line-height: 0.9; margin-bottom: 1.5rem; }
+        .hero-overlay h1 span { font-style: italic; font-weight: 400; color: var(--accent); }
+        .hero-meta { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid var(--border); padding-top: 2rem; }
+        .hero-meta p { font-size: 1.1rem; color: var(--text-primary); max-width: 400px; line-height: 1.5; }
+        .hero-cta-group { display: flex; gap: 1rem; }
+        .btn-primary, .btn-secondary { padding: 14px 28px; border-radius: 100px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; border: 1px solid var(--border); }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background: var(--text-primary); border-color: var(--text-primary); }
+        .btn-secondary { background: transparent; color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--text-primary); color: var(--bg); }
+
+        /* Static Tech Tags Block */
+        .tech-tags-block {
+            border-bottom: 1px solid var(--border); background: var(--bg);
+            padding: 3rem 2.5rem; max-width: 1400px; margin: 0 auto;
+        }
+        .tech-tags-container { display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; align-items: baseline; }
+        .tech-tags-container span {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 700; text-transform: uppercase;
+            color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.2; transition: color 0.2s ease;
+        }
+        .tech-tags-container span:hover { color: var(--accent); }
+        .tech-tags-container span:nth-child(even) { color: var(--text-dim); font-weight: 400; }
+        .tech-tags-container span:nth-child(even):hover { color: var(--accent); }
+
+        /* Layout */
+        main { position: relative; z-index: 2; }
+        section { padding: 8rem 2.5rem; max-width: 1400px; margin: 0 auto; }
+        .section-header { margin-bottom: 4rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
+        .section-label { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: block; }
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+
+        /* About & Timeline */
+        #about, .timeline-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 0; border-top: 1px solid var(--border); }
+        .about-col, .timeline-col { padding: 3rem; border-right: 1px solid var(--border); }
+        .about-col:last-child, .timeline-col:last-child { border-right: none; }
+        .profile-body p { line-height: 1.6; margin-bottom: 1rem; font-size: 1.2rem; color: var(--text-primary); }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 1rem; font-weight: 500; }
+        .stat-bar { width: 100%; height: 4px; background: #ddd; margin-bottom: 1.25rem; overflow: hidden; }
+        .stat-fill { height: 100%; background: var(--text-primary); }
+        .exp-item, .edu-item { border-left: 2px solid var(--accent); padding-left: 2rem; margin-bottom: 2rem; position: relative; }
+        .exp-item::before, .edu-item::before { content: ""; width: 10px; height: 10px; background: var(--bg); border: 2px solid var(--text-primary); border-radius: 50%; position: absolute; left: -7px; top: 5px; }
+        .date { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block; text-transform: uppercase; }
+        .role { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .company { font-size: 1rem; color: var(--accent); margin-bottom: 0.8rem; display: block; text-decoration: none; font-weight: 600; }
+        .exp-desc { font-size: 1rem; line-height: 1.6; color: var(--text-secondary); }
+
+        /* Portfolio */
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border: 1px solid var(--border); }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .reel-breakdown { margin-top: 1rem; background: var(--surface); border: 1px solid var(--border); padding: 2rem; }
+        .breakdown-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-weight: 700; }
+        .breakdown-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .breakdown-item { display: flex; gap: 2rem; padding: 1.5rem 0; border-bottom: 1px solid #eee; transition: background 0.2s; }
+        .breakdown-item:hover { background: #fafafa; }
+        .breakdown-item:nth-child(even) { padding-left: 2rem; border-left: 1px solid #eee; }
+        .timestamp { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.9rem; font-weight: 700; min-width: 80px; }
+        .breakdown-content strong { display: block; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .breakdown-content p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+
+        /* Project Grid */
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .project-card { background: var(--surface); border: 1px solid var(--border); overflow: hidden; transition: transform 0.3s ease; position: relative; }
+        .project-card:hover { transform: translateY(-5px); }
+        .project-img { width: 100%; height: 200px; object-fit: cover; filter: grayscale(100%); transition: filter 0.3s ease; }
+        .project-card:hover .project-img { filter: grayscale(0%); }
+        .project-info { padding: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .project-info h3 { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; }
+        .project-info p { font-size: 0.9rem; color: var(--text-secondary); }
+        .project-arrow { font-size: 1.5rem; color: var(--text-primary); transition: transform 0.2s; }
+        .project-card:hover .project-arrow { transform: rotate(45deg); color: var(--accent); }
+
+        /* Featured Projects */
+        .deep-dive-card { border: 1px solid var(--border); margin-bottom: 5rem; background: var(--surface); }
+        .deep-dive-header { padding: 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+        .deep-dive-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin-top: 0.5rem; }
+        .deep-dive-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .deep-dive-video { border-bottom: 1px solid var(--border); }
+        .breakdown-media-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; border-bottom: 1px solid var(--border); }
+        .breakdown-media { position: relative; border-right: 1px solid var(--border); height: 250px; overflow: hidden; background: #000; }
+        .breakdown-media:last-child { border-right: none; }
+        .breakdown-media img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.3s, transform 0.3s; }
+        .breakdown-media:hover img { opacity: 1; transform: scale(1.05); }
+        .media-label { position: absolute; top: 1rem; left: 1rem; background: var(--bg); color: var(--text-primary); padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--border); }
+        .deep-dive-text { display: grid; grid-template-columns: 1fr 1fr; }
+        .deep-dive-text-col { padding: 2rem; }
+        .deep-dive-text-col:first-child { border-right: 1px solid var(--border); }
+        .deep-dive-text-col h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; margin-bottom: 1rem; font-weight: 700; color: var(--text-primary); }
+        .deep-dive-text-col p { color: var(--text-secondary); font-size: 1rem; line-height: 1.6; }
+
+        /* Modal */
+        #project-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; overflow-y: auto; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        #project-modal.open { opacity: 1; visibility: visible; }
+        .modal-inner { max-width: 1400px; margin: 0 auto; padding: 4rem 2.5rem; }
+        .modal-close { position: fixed; top: 2rem; right: 2.5rem; background: var(--text-primary); color: var(--bg); border: none; padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; z-index: 1001; text-transform: uppercase; }
+        .modal-close:hover { background: var(--accent); }
+        .modal-header { margin-bottom: 3rem; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
+        .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(3rem, 8vw, 6rem); font-weight: 700; letter-spacing: -0.03em; line-height: 0.9; }
+        .modal-tags { display: flex; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .modal-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; background: var(--text-primary); color: var(--bg); padding: 6px 12px; text-transform: uppercase; }
+        .modal-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem; border-top: 1px solid var(--border); padding-top: 3rem; }
+        .modal-video { border: 1px solid var(--border); padding-bottom: 56.25%; height: 0; position: relative; overflow: hidden; background: #000; margin-bottom: 2rem; }
+        .modal-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .modal-process h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+        .modal-process p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem; font-size: 1.05rem; }
+        .modal-breakdown-step { margin-bottom: 1.5rem; padding-left: 1.5rem; border-left: 2px solid var(--accent); }
+        .modal-breakdown-step strong { display: block; font-size: 1rem; color: var(--text-primary); margin-bottom: 0.2rem; }
+
+        /* Miro */
+        .miro-embed-wrapper { background: var(--surface); border: 1px solid var(--border); overflow: hidden; margin-top: 2rem; }
+        .miro-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg); }
+        .miro-header span { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.2rem; text-transform: uppercase; }
+        .miro-header a { font-size: 0.85rem; color: var(--bg); background: var(--text-primary); text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 100px; transition: background 0.2s; text-transform: uppercase; }
+        .miro-header a:hover { background: var(--accent); }
+        .miro-iframe-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; }
+        .miro-iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* Contact */
+        #contact { text-align: left; border-top: 1px solid var(--border); padding: 8rem 2.5rem 4rem 2.5rem; max-width: 100%; }
+        .contact-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(3rem, 10vw, 10rem); font-weight: 700; margin-bottom: 3rem; letter-spacing: -0.05em; line-height: 0.9; }
+        .contact-title span { color: var(--accent); font-style: italic; font-weight: 400; }
+        .contact-grid { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--border); padding-top: 3rem; }
+        .contact-btn { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; color: var(--text-primary); text-decoration: none; font-weight: 500; transition: color 0.2s ease; display: block; margin-bottom: 0.5rem; }
+        .contact-btn:hover { color: var(--accent); }
+        .footer-copy { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-secondary); margin-top: 4rem; display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 2rem; text-transform: uppercase; flex-wrap: wrap; gap: 1rem; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            #about, .timeline-grid, .modal-layout, .breakdown-media-grid, .deep-dive-text { grid-template-columns: 1fr; }
+            .breakdown-list { grid-template-columns: 1fr; }
+            .breakdown-item:nth-child(even) { padding-left: 0; border-left: none; }
+            .about-col, .timeline-col, .breakdown-media, .deep-dive-text-col { border-right: none; border-bottom: 1px solid var(--border); }
+            .breakdown-media { height: 200px; }
+            section { padding: 5rem 1.5rem; }
+            nav { padding: 1rem 1.5rem; }
+            #contact { padding: 5rem 1.5rem 2rem 1.5rem; }
+            .footer-copy { flex-direction: column; gap: 1rem; }
+            body { cursor: auto; }
+            a, button, .clickable { cursor: pointer; }
+            #custom-cursor { display: none; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { gap: 1rem; font-size: 0.7rem; }
+            .hero-overlay h1 { font-size: 3.5rem; }
+            .hero-meta { flex-direction: column; align-items: flex-start; gap: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="custom-cursor"></div>
+
+    <div id="loader">
+        <div class="loader-container">
+            <div class="loader-header">COMPILING <span>SHADERS</span> — PLEASE WAIT</div>
+            <div class="loader-progress-bar"><div class="loader-progress-fill" id="loader-fill"></div></div>
+            <div class="loader-logs" id="loader-logs">
+                <p>> FETCHING SPIRV ASSEMBLY...</p>
+                <p>> LINKING FRAGMENT PROGRAMS...</p>
+                <p>> ALLOCATING GPU MEMORY...</p>
+                <p>> BUILDING RENDER PIPELINE...</p>
+                <p>> INITIALIZING RASTERIZER...</p>
+            </div>
+            <div class="loader-percent" id="loader-percent">0%</div>
+        </div>
+    </div>
+
+    <nav id="navbar">
+        <a href="#hero" class="nav-logo">Parit Katre ©</a>
+        <ul class="nav-links">
+            <li><a href="#about">Profile</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#projects">Work</a></li>
+            <li><a href="#deep-dives">Projects</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header id="hero">
+        <canvas id="three-canvas"></canvas>
+        <div class="hero-overlay">
+            <span class="hero-tag">Available for Hire • Bangalore, IN</span>
+            <h1>GAMEPLAY<br><span>ANIMATOR</span></h1>
+            <div class="hero-meta">
+                <p>Specializing in Unreal Engine 5 and Maya. Building responsive, personality-driven character animation for AAA action games.</p>
+                <div class="hero-cta-group">
+                    <a href="#projects" class="btn-primary">View Reel</a>
+                    <a href="#deep-dives" class="btn-secondary">Projects</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="tech-tags-block">
+        <div class="tech-tags-container">
+            <span>UNREAL ENGINE 5</span>
+            <span>AUTODESK MAYA</span>
+            <span>COMBAT SYSTEMS</span>
+            <span>LOCOMOTION</span>
+            <span>MOTION CAPTURE</span>
+            <span>ANIMATION BLUEPRINTS</span>
+            <span>ROOT MOTION</span>
+            <span>SEQUENCER</span>
+            <span>STATE MACHINES</span>
+            <span>3D ANIMATION</span>
+        </div>
+    </div>
+
+    <main>
+        <section id="about" style="max-width:1400px; margin:0 auto; padding:0; border-bottom: 1px solid var(--border);">
+            <div class="about-col">
+                <span class="section-label">(01) — PROFILE</span>
+                <h3 class="section-title" style="font-size: 2rem; margin-bottom: 2rem;">Professional Summary</h3>
+                <div class="profile-body">
+                    <p>Gameplay Animator specializing in Unreal Engine 5 and Autodesk Maya. Experienced in creating gameplay-focused animations, combat systems, locomotion, and animation implementation.</p>
+                    <p>Passionate about building responsive, personality-driven character animation for AAA action games. Dedicated to iterating based on team feedback to achieve the highest quality visual output.</p>
+                </div>
+            </div>
+            <div class="about-col">
+                <span class="section-label">(02) — TECH STACK</span>
+                <div style="margin-top: 2rem;">
+                    <div class="stat-row"><span>Autodesk Maya</span><span>95%</span></div><div class="stat-bar"><div class="stat-fill" style="width: 95%"></div></div>
+                    <div class="stat-row"><span>Unreal Engine 5</span><span>90%</span></div><div class="stat-bar"><div class="stat-fill" style="width: 90%"></div></div>
+                    <div class="stat-row"><span>3ds Max</span><span>85%</span></div><div class="stat-bar"><div class="stat-fill" style="width: 85%"></div></div>
+                    <div class="stat-row"><span>Anim Implementation</span><span>88%</span></div><div class="stat-bar"><div class="stat-fill" style="width: 88%"></div></div>
+                    <div class="stat-row"><span>C++ (Fundamentals)</span><span>70%</span></div><div class="stat-bar"><div class="stat-fill" style="width: 70%"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" style="max-width:1400px; margin:0 auto; padding:0; border-bottom: 1px solid var(--border);">
+            <div class="timeline-grid">
+                <div class="timeline-col">
+                    <span class="section-label">(03) — EXPERIENCE</span>
+                    <div class="exp-item" style="margin-top: 2rem;">
+                        <span class="date">APR 2026 - JUN 2026</span>
+                        <div class="role">Gameplay Animation Intern</div>
+                        <a href="https://www.linkedin.com/company/ardra-studios/" class="company" target="_blank" rel="noopener noreferrer">Ardra Studios</a>
+                        <p class="exp-desc">Developed and refined gameplay animations using Maya and Unreal Engine 5 based on team feedback. Worked under the lead animator to create and polish animations for an unannounced game project.</p>
+                    </div>
+                </div>
+                <div class="timeline-col">
+                    <span class="section-label">(04) — EDUCATION</span>
+                    <div class="edu-item" style="margin-top: 2rem;">
+                        <span class="date">GRADUATED 2026</span>
+                        <div class="role">Bachelor of Visual Arts</div>
+                        <a href="https://www.linkedin.com/school/asian-institute-of-design-aid/" class="company" target="_blank" rel="noopener noreferrer">Asian Institute of Design</a>
+                        <p class="exp-desc">Specialized in 3D Animation with a foundation in 2D Animation, 3D Modeling, and Game Art. Experienced with Autodesk Maya, Unreal Engine 5, Blender, and Autodesk 3ds Max.</p>
+                        <div style="margin-top: 15px; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace;">CGPA: <span style="background: var(--bg); padding: 4px 8px; border: 1px solid var(--border); font-weight: 600;">8.35</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <div class="section-header">
+                <div><span class="section-label">(05) — PORTFOLIO</span><h2 class="section-title">Selected Works</h2></div>
+                <p style="max-width: 300px; color: var(--text-secondary); font-size: 0.9rem;">A curated selection of gameplay, combat, and locomotion animations crafted for high-action scenarios.</p>
+            </div>
+            
+            <div class="video-container" style="margin-bottom: 1rem;">
+                <iframe src="https://www.youtube.com/embed/u4G1n1Ygrr0?autoplay=1&mute=1&loop=1&playlist=u4G1n1Ygrr0&controls=1&rel=0&modestbranding=1" title="Parit Katre Demo Reel" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+
+            <div class="reel-breakdown">
+                <h3 class="breakdown-title">REEL 2026 BREAKDOWN</h3>
+                <div class="breakdown-list">
+                    <div class="breakdown-item clickable" onclick="openModal('combat')">
+                        <span class="timestamp">0:00 - 0:08</span>
+                        <div class="breakdown-content"><strong>Intro / Title Sequence</strong><p>Camera animation and dynamic posing handled entirely by me.</p></div>
+                    </div>
+                    <div class="breakdown-item clickable" onclick="openModal('combat')">
+                        <span class="timestamp">0:08 - 0:15</span>
+                        <div class="breakdown-content"><strong>Combat Attack Combo</strong><p>Root motion attack sequences, hit reactions, and recovery frames.</p></div>
+                    </div>
+                    <div class="breakdown-item clickable" onclick="openModal('locomotion')">
+                        <span class="timestamp">0:15 - 0:22</span>
+                        <div class="breakdown-content"><strong>Locomotion Setup</strong><p>Directional walks and runs using Blend Spaces in UE5.</p></div>
+                    </div>
+                    <div class="breakdown-item clickable" onclick="openModal('locomotion')">
+                        <span class="timestamp">0:22 - 0:28</span>
+                        <div class="breakdown-content"><strong>Character Jump & Landing</strong><p>Anticipation, air control, and heavy impact posing.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="projects-grid">
+                <div class="project-card clickable" onclick="openModal('combat')">
+                    <img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=600&auto=format&fit=crop" class="project-img" alt="Gameplay Combat">
+                    <div class="project-info"><div><h3>Gameplay Combat</h3><p>Combo system • Root Motion</p></div><span class="project-arrow">↗</span></div>
+                </div>
+                <div class="project-card clickable" onclick="openModal('locomotion')">
+                    <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=600&auto=format&fit=crop" class="project-img" alt="Locomotion">
+                    <div class="project-info"><div><h3>Locomotion Sets</h3><p>Walk • Run • Strafing</p></div><span class="project-arrow">↗</span></div>
+                </div>
+                <div class="project-card clickable" onclick="openModal('animbp')">
+                    <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=600&auto=format&fit=crop" class="project-img" alt="Implementation">
+                    <div class="project-info"><div><h3>Anim Implementation</h3><p>AnimBPs • State Machines</p></div><span class="project-arrow">↗</span></div>
+                </div>
+                <div class="project-card clickable" onclick="openModal('boss')">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=600&auto=format&fit=crop" class="project-img" alt="Boss Fight">
+                    <div class="project-info"><div><h3>Boss AI Animations</h3><p>Telegraphs • Phases</p></div><span class="project-arrow">↗</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deep-dives">
+            <div class="section-header">
+                <div><span class="section-label">(06) — FEATURED PROJECTS</span><h2 class="section-title">Deep Dives</h2></div>
+                <p style="max-width: 300px; color: var(--text-secondary); font-size: 0.9rem;">A detailed breakdown of the animation process, engine implementation, and visual development.</p>
+            </div>
+
+            <div class="deep-dive-card">
+                <div class="deep-dive-header">
+                    <div>
+                        <span class="section-label">PROJECT 01</span>
+                        <h3 class="deep-dive-title">Cinematic Sequences</h3>
+                    </div>
+                    <div class="deep-dive-tags">
+                        <span class="modal-tag">Sequencer</span>
+                        <span class="modal-tag">Camera Anim</span>
+                        <span class="modal-tag">UE5</span>
+                    </div>
+                </div>
+                <div class="deep-dive-video">
+                    <div class="video-container" style="border: none;">
+                        <iframe src="https://www.youtube.com/embed/u4G1n1Ygrr0?autoplay=1&mute=1&loop=1&playlist=u4G1n1Ygrr0&controls=1&rel=0&modestbranding=1" title="Cinematic Project" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="breakdown-media-grid">
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=800&auto=format&fit=crop" alt="Preview GIF">
+                        <span class="media-label">PREVIEW GIF</span>
+                    </div>
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=600&auto=format&fit=crop" alt="Animation Breakdown">
+                        <span class="media-label">ANIMATION BREAKDOWN</span>
+                    </div>
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1551103782-8ab07afd45c1?q=80&w=600&auto=format&fit=crop" alt="Implementation Breakdown">
+                        <span class="media-label">IMPLEMENTATION</span>
+                    </div>
+                </div>
+                <div class="deep-dive-text">
+                    <div class="deep-dive-text-col">
+                        <h4>Animation Process</h4>
+                        <p>Blocked out camera paths and character blocking in UE5 Sequencer to establish timing. Refined character performances, facial animations, and gestures to match the dialogue and tone.</p>
+                    </div>
+                    <div class="deep-dive-text-col">
+                        <h4>Implementation Details</h4>
+                        <p>Added post-processing, depth of field, and cinematic lighting to achieve the final look. Linked animation curves to camera focal length for dynamic emphasis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deep-dive-card">
+                <div class="deep-dive-header">
+                    <div>
+                        <span class="section-label">PROJECT 02</span>
+                        <h3 class="deep-dive-title">Mech Biped Setup</h3>
+                    </div>
+                    <div class="deep-dive-tags">
+                        <span class="modal-tag">Inverse Kinematics</span>
+                        <span class="modal-tag">Mechs</span>
+                        <span class="modal-tag">Maya</span>
+                    </div>
+                </div>
+                <div class="deep-dive-video">
+                    <div class="video-container" style="border: none;">
+                        <iframe src="https://player.vimeo.com/video/1208844021?autoplay=1&muted=1&autopause=0&loop=1&title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="breakdown-media-grid">
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=800&auto-format&fit=crop" alt="Preview GIF">
+                        <span class="media-label">PREVIEW GIF</span>
+                    </div>
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=600&auto=format&fit=crop" alt="Animation Breakdown">
+                        <span class="media-label">ANIMATION BREAKDOWN</span>
+                    </div>
+                    <div class="breakdown-media">
+                        <img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=600&auto=format&fit=crop" alt="Implementation Breakdown">
+                        <span class="media-label">IMPLEMENTATION</span>
+                    </div>
+                </div>
+                <div class="deep-dive-text">
+                    <div class="deep-dive-text-col">
+                        <h4>Animation Process</h4>
+                        <p>Set up complex inverse kinematic chains in Maya to handle mechanical joints and foot locking. Emphasized anticipation and slow-outs to sell the massive scale and weight of the machine.</p>
+                    </div>
+                    <div class="deep-dive-text-col">
+                        <h4>Implementation Details</h4>
+                        <p>Synced footsteps with particle effects and camera shakes to maximize impact. Configured control rigs in engine to allow dynamic targeting and IK foot placement on uneven terrain.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="process">
+            <div class="section-header">
+                <div><span class="section-label">(07) — TECHNICAL BREAKDOWN</span><h2 class="section-title">Animation Deep-Dive</h2></div>
+                <p style="max-width: 300px; color: var(--text-secondary); font-size: 0.9rem;">An inside look at the engine architecture and planning behind the movement.</p>
+            </div>
+            
+            <!-- Official Standard Miro Board Integration -->
+            <div class="miro-embed-wrapper">
+                <div class="miro-header">
+                    <span>Planning & Storyboard Board</span>
+                    <a href="https://miro.com/app/board/uXjVHvFYhfo=/" target="_blank" rel="noopener noreferrer">Open in New Tab ↗</a>
+                </div>
+                <div class="miro-iframe-container">
+                    <iframe src="https://miro.com/app/live-board/uXjVHvFYhfo=/?embedOnWebsite=1" frameborder="0" scrolling="auto" allow="fullscreen; clipboard-read; clipboard-write; encrypted-media; picture-in-picture;" allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <footer id="contact">
+            <span class="section-label" style="display:block; text-align:center; margin-bottom:2rem;">(08) — CONTACT</span>
+            <h2 class="contact-title">LET'S MAKE<br><span>SOMETHING MOVE.</span></h2>
+            <div class="contact-grid">
+                <div>
+                    <p style="color:var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Email Me</p>
+                    <a href="mailto:paritkatre11@gmail.com" class="contact-btn">paritkatre11@gmail.com ↗</a>
+                </div>
+                <div>
+                    <p style="color:var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Socials</p>
+                    <a href="https://www.linkedin.com/in/parit-katre-390772229/" target="_blank" rel="noopener noreferrer" class="contact-btn">LinkedIn ↗</a>
+                    <a href="https://vimeo.com/user222804158" target="_blank" rel="noopener noreferrer" class="contact-btn">Vimeo ↗</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                <span>© 2026 PARIT KATRE</span><span>ALL RIGHTS RESERVED</span><span>BANGALORE, INDIA</span>
+            </div>
+        </footer>
+    </main>
+
+    <div id="project-modal">
+        <button class="modal-close clickable" onclick="closeModal()">[ X CLOSE ]</button>
+        <div class="modal-inner">
+            <div class="modal-header">
+                <span class="section-label" id="modal-label">PROJECT 01</span>
+                <h1 class="modal-title" id="modal-title">GAMEPLAY COMBAT</h1>
+                <div class="modal-tags" id="modal-tags"></div>
+            </div>
+            <div class="modal-layout">
+                <div class="modal-main">
+                    <div class="modal-video">
+                        <iframe id="modal-video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                    <div class="modal-process">
+                        <h3>Process Breakdown</h3>
+                        <div id="modal-process-steps"></div>
+                    </div>
+                </div>
+                <div class="modal-aside">
+                    <h3>Technical Details</h3>
+                    <p id="modal-desc"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js Interactive Animation Graph (Stretched Horizontally) -->
+    <script type="module">
+        import * as THREE from 'three';
+
+        let scene, camera, renderer, raycaster, mouse;
+        let kf0, kf1, tan0, tan1, curveLine, curveGeo, h1Geo, h2Geo, ball;
+        let isDragging = false;
+        let draggedObject = null;
+        let autoPlayActive = true;
+        let autoPlayTimer = 0;
+
+        // Stretched coordinates for a wider, fuller look on the right side
+        const panelXStart = 1.5;
+        const panelXEnd = 9.5;
+        const trackY = 4.5;
+        const graphYBase = -4.0;
+        const graphYRange = 3.0; 
+
+        function init3D() {
+            scene = new THREE.Scene();
+            
+            const aspect = window.innerWidth / window.innerHeight;
+            const viewSize = 10;
+            camera = new THREE.OrthographicCamera(-viewSize * aspect, viewSize * aspect, viewSize, -viewSize, 0.1, 1000);
+            camera.position.z = 10;
+
+            const canvas = document.getElementById('three-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x000000, 0); 
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambient);
+
+            // Graph Axis
+            const axisPoints = [new THREE.Vector3(panelXStart, graphYBase, 0), new THREE.Vector3(panelXEnd, graphYBase, 0)];
+            const axisGeo = new THREE.BufferGeometry().setFromPoints(axisPoints);
+            const axisMat = new THREE.LineBasicMaterial({ color: 0x0A0A0A, transparent: true, opacity: 0.1 });
+            const axisLine = new THREE.Line(axisGeo, axisMat);
+            scene.add(axisLine);
+
+            // Keyframes
+            const keyframeMat = new THREE.MeshStandardMaterial({ color: 0x0A0A0A });
+            const keyframeGeo = new THREE.OctahedronGeometry(0.2, 0);
+            
+            kf0 = new THREE.Mesh(keyframeGeo, keyframeMat);
+            kf0.position.set(panelXStart, graphYBase, 0);
+            kf1 = new THREE.Mesh(keyframeGeo, keyframeMat);
+            kf1.position.set(panelXEnd, graphYBase + graphYRange, 0);
+            scene.add(kf0, kf1);
+
+            // Tangents
+            const tangentMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+            const tangentGeo = new THREE.SphereGeometry(0.15, 16, 16);
+            
+            // Adjusted tangent start positions for the new wider layout
+            tan0 = new THREE.Mesh(tangentGeo, tangentMat);
+            tan0.position.set(panelXStart + 2.0, graphYBase, 0);
+            
+            tan1 = new THREE.Mesh(tangentGeo, tangentMat);
+            tan1.position.set(panelXEnd - 2.0, graphYBase + graphYRange, 0);
+            
+            scene.add(tan0, tan1);
+
+            // Handle Lines
+            const handleMat = new THREE.LineBasicMaterial({ color: 0x0A0A0A, transparent: true, opacity: 0.3 });
+            h1Geo = new THREE.BufferGeometry().setFromPoints([kf0.position, tan0.position]);
+            const h1Line = new THREE.Line(h1Geo, handleMat);
+            h2Geo = new THREE.BufferGeometry().setFromPoints([kf1.position, tan1.position]);
+            const h2Line = new THREE.Line(h2Geo, handleMat);
+            scene.add(h1Line, h2Line);
+
+            // Curve
+            const curve = new THREE.CubicBezierCurve3(kf0.position, tan0.position, tan1.position, kf1.position);
+            const curvePoints = curve.getPoints(200);
+            curveGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+            const curveMat = new THREE.LineBasicMaterial({ color: 0xFF3B00 });
+            curveLine = new THREE.Line(curveGeo, curveMat);
+            scene.add(curveLine);
+
+            // Ball Track
+            const trackPoints = [new THREE.Vector3(panelXStart, trackY, 0), new THREE.Vector3(panelXEnd, trackY, 0)];
+            const trackGeo = new THREE.BufferGeometry().setFromPoints(trackPoints);
+            const trackMat = new THREE.LineBasicMaterial({ color: 0x0A0A0A, transparent: true, opacity: 0.2 });
+            const trackLine = new THREE.Line(trackGeo, trackMat);
+            scene.add(trackLine);
+
+            // Ball
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0x0A0A0A, roughness: 0.2, metalness: 0.8 });
+            ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), ballMat);
+            ball.position.set(panelXStart, trackY, 0);
+            scene.add(ball);
+
+            // Interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('resize', onWindowResize);
+            
+            animate();
+        }
+
+        function onMouseMove(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            if (isDragging && draggedObject) {
+                autoPlayActive = false;
+                raycaster.setFromCamera(mouse, camera);
+                const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+                const intersection = new THREE.Vector3();
+                raycaster.ray.intersectPlane(plane, intersection);
+                
+                // Wider constraints for the tangents
+                if (draggedObject === tan0) {
+                    intersection.x = Math.max(kf0.position.x + 1.0, Math.min(intersection.x, kf1.position.x - 3.0));
+                    intersection.y = Math.max(graphYBase - 1, Math.min(intersection.y, graphYBase + graphYRange + 1));
+                } else {
+                    intersection.x = Math.max(kf0.position.x + 3.0, Math.min(intersection.x, kf1.position.x - 1.0));
+                    intersection.y = Math.max(graphYBase - 1, Math.min(intersection.y, graphYBase + graphYRange + 1));
+                }
+                draggedObject.position.copy(intersection);
+                updateCurve();
+            } else {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects([tan0, tan1]);
+                if (intersects.length > 0) {
+                    document.getElementById('custom-cursor').classList.add('dragging');
+                } else {
+                    document.getElementById('custom-cursor').classList.remove('dragging');
+                }
+            }
+        }
+
+        function onMouseDown(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([tan0, tan1]);
+            if (intersects.length > 0) {
+                isDragging = true;
+                draggedObject = intersects[0].object;
+                document.getElementById('custom-cursor').classList.add('dragging');
+                e.preventDefault();
+            }
+        }
+
+        function onMouseUp() {
+            if (isDragging) {
+                isDragging = false;
+                draggedObject = null;
+                document.getElementById('custom-cursor').classList.remove('dragging');
+                setTimeout(() => { autoPlayActive = true; }, 3000);
+            }
+        }
+
+        function updateCurve() {
+            h1Geo.setFromPoints([kf0.position, tan0.position]);
+            h2Geo.setFromPoints([kf1.position, tan1.position]);
+            const curve = new THREE.CubicBezierCurve3(kf0.position, tan0.position, tan1.position, kf1.position);
+            const newPoints = curve.getPoints(200);
+            curveGeo.setFromPoints(newPoints);
+        }
+
+        function onWindowResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            const viewSize = 10;
+            camera.left = -viewSize * aspect;
+            camera.right = viewSize * aspect;
+            camera.top = viewSize;
+            camera.bottom = -viewSize;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = Date.now() * 0.0005;
+
+            if (autoPlayActive) {
+                autoPlayTimer += 0.01;
+                const cycle = Math.sin(autoPlayTimer * 0.5) * 2;
+                
+                const targetTan0Y = graphYBase + cycle * 1.5;
+                const targetTan1Y = graphYBase + graphYRange - cycle * 1.5;
+                
+                tan0.position.y += (targetTan0Y - tan0.position.y) * 0.05;
+                tan1.position.y += (targetTan1Y - tan1.position.y) * 0.05;
+                updateCurve();
+            }
+
+            let currentTime = (Math.sin(t * 0.8) + 1) / 2; 
+            const targetX = panelXStart + currentTime * (panelXEnd - panelXStart); 
+            
+            const points = curveGeo.attributes.position.array;
+            let bestY = graphYBase;
+            let minDiff = Infinity;
+            for (let i = 0; i < points.length; i += 3) {
+                const px = points[i];
+                const py = points[i+1];
+                const diff = Math.abs(px - targetX);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    bestY = py;
+                }
+            }
+            
+            const ballValue = (bestY - graphYBase) / graphYRange; 
+            ball.position.x = panelXStart + ballValue * (panelXEnd - panelXStart);
+            
+            renderer.render(scene, camera);
+        }
+
+        init3D();
+    </script>
+
+    <!-- Logic Script -->
+    <script>
+        // Loader
+        const loaderFill = document.getElementById('loader-fill');
+        const loaderPercent = document.getElementById('loader-percent');
+        const loaderLogs = document.getElementById('loader-logs').children;
+        let progress = 0;
+        let logIndex = 0;
+
+        const loadInterval = setInterval(() => {
+            progress += Math.random() * 30 + 20; 
+            if (progress >= 100) progress = 100;
+            
+            loaderFill.style.width = progress + '%';
+            loaderPercent.innerText = Math.floor(progress) + '%';
+
+            const expectedLog = Math.floor((progress / 100) * loaderLogs.length);
+            if (expectedLog > logIndex && logIndex < loaderLogs.length) {
+                loaderLogs[logIndex].classList.add('visible');
+                logIndex++;
+            }
+
+            if (progress === 100) {
+                clearInterval(loadInterval);
+                if (logIndex < loaderLogs.length) {
+                    for(let i = logIndex; i < loaderLogs.length; i++) {
+                        loaderLogs[i].classList.add('visible');
+                    }
+                }
+                setTimeout(() => {
+                    document.getElementById('loader').classList.add('hidden');
+                }, 300);
+            }
+        }, 40);
+
+        // Cursor
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+        document.querySelectorAll('.clickable, a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+
+        // Modal Data
+        const projectData = {
+            combat: {
+                title: "GAMEPLAY COMBAT", label: "PROJECT 01 — COMBAT SYSTEM",
+                tags: ["Root Motion", "Maya", "UE5", "Hit Reactions"],
+                video: "https://www.youtube.com/embed/u4G1n1Ygrr0?autoplay=1&mute=1&loop=1&playlist=u4G1n1Ygrr0",
+                desc: "This system focuses on responsive, weight-driven combat. Using Root Motion, the character moves precisely through space during attacks, ensuring hits align perfectly with visual impacts. Hit reactions are dynamically triggered based on attack angle and velocity.",
+                steps: [
+                    { strong: "01. Blocking", p: "Established key poses: anticipation, contact, and recovery. Focused on clear silhouettes." },
+                    { strong: "02. Splining & Arcs", p: "Refined motion arcs for the weapon and center of gravity. Polished timing to ensure snappy, gameplay-ready responsiveness." },
+                    { strong: "03. Engine Implementation", p: "Imported via FBX, set up in an Animation Montage. Linked hit-stop and camera shake events to specific frames using Anim Notifies." }
+                ]
+            },
+            locomotion: {
+                title: "DIRECTIONAL LOCOMOTION", label: "PROJECT 02 — MOVEMENT SYSTEM",
+                tags: ["Blend Spaces", "UE5", "Jog Stops", "Strafing"],
+                video: "https://player.vimeo.com/video/1208844021?autoplay=1&muted=1&autopause=0&loop=1",
+                desc: "Implemented a responsive directional locomotion system using UE5 Blend Spaces. To eliminate foot sliding and jitter during sharp turns, rotational movement was prioritized over pure velocity translation.",
+                steps: [
+                    { strong: "01. Core Cycles", p: "Animated Walk, Jog, and Run cycles in Maya ensuring perfect looping and weight shift." },
+                    { strong: "02. Start/Stop Variations", p: "Created dynamic start, stop, and pivot animations to blend seamlessly from idle to full run." },
+                    { strong: "03. Blend Space Setup", p: "Mapped animations to velocity and direction data in UE5. Configured interpolation to prevent foot sliding." }
+                ]
+            },
+            animbp: {
+                title: "ANIM IMPLEMENTATION", label: "PROJECT 03 — ENGINE ARCHITECTURE",
+                tags: ["AnimBPs", "State Machines", "C++", "Montages"],
+                video: "https://www.youtube.com/embed/u4G1n1Ygrr0?autoplay=1&mute=1&loop=1&playlist=u4G1n1Ygrr0",
+                desc: "Bridging the gap between art and programming. Built complex Animation Blueprints to drive character state logic, blending upper-body combat with lower-body locomotion dynamically.",
+                steps: [
+                    { strong: "01. State Machine Logic", p: "Constructed a clean state machine handling Idle, Locomotion, Jump, and Combat states." },
+                    { strong: "02. Layered Blending", p: "Used Layered blend per bone to allow upper-body attacks while maintaining lower-body movement." },
+                    { strong: "03. Datadriven Inputs", p: "Exposed variables to Blueprints and C++ so designers could tweak timing and blend values easily." }
+                ]
+            },
+            boss: {
+                title: "BOSS AI ANIMATIONS", label: "PROJECT 04 — AI BEHAVIOR",
+                tags: ["Telegraphs", "Phases", "Heavy Impacts"],
+                video: "https://player.vimeo.com/video/1208844021?autoplay=1&muted=1&autopause=0&loop=1",
+                desc: "Animated a multi-phase boss encounter. Emphasis was placed on clear telegraphing so the player can read the attack, react, and feel a sense of scale and heavy impact.",
+                steps: [
+                    { strong: "01. Telegraphing", p: "Exaggerated anticipation poses held for 15-20 frames to give players time to react." },
+                    { strong: "02. Impact Frames", p: "Added screen shake and particle events at the exact frame of impact to sell weight." },
+                    { strong: "03. Transition Phases", p: "Created distinct animation sets for Rage Phase 2, changing posture and attack speed." }
+                ]
+            }
+        };
+
+        function openModal(projectKey) {
+            const data = projectData[projectKey];
+            if (!data) return;
+
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-label').innerText = data.label;
+            document.getElementById('modal-video-frame').src = data.video;
+            document.getElementById('modal-desc').innerText = data.desc;
+
+            const tagsContainer = document.getElementById('modal-tags');
+            tagsContainer.innerHTML = '';
+            data.tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'modal-tag';
+                tagEl.innerText = tag;
+                tagsContainer.appendChild(tagEl);
+            });
+
+            const stepsContainer = document.getElementById('modal-process-steps');
+            stepsContainer.innerHTML = '';
+            data.steps.forEach(step => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'modal-breakdown-step';
+                stepEl.innerHTML = `<strong>${step.strong}</strong><p>${step.p}</p>`;
+                stepsContainer.appendChild(stepEl);
+            });
+
+            document.getElementById('project-modal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('project-modal').classList.remove('open');
+            document.getElementById('modal-video-frame').src = ''; 
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
