@@ -12,41 +12,16 @@
 
     <style>
         :root {
-            --bg: #F7F4ED;
-            --surface: #FFFFFF;
-            --text-primary: #2B2B2B;
-            --text-secondary: #6B6B6B;
-            --border: #2B2B2B;
-            --accent: #E07A5F;
-            --accent-light: #F2A68E;
-            --shadow: rgba(43, 43, 43, 0.15);
+            --bg: #F7F4ED; --surface: #FFFFFF; --text-primary: #2B2B2B; --text-secondary: #6B6B6B;
+            --border: #2B2B2B; --accent: #E07A5F; --accent-light: #F2A68E; --shadow: rgba(43, 43, 43, 0.15);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; scroll-padding-top: 80px; }
-        
-        body {
-            background-color: var(--bg);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232B2B2B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/><path d='M13 13l6 6'/></svg>") 4 4, auto;
-        }
-
+        body { background-color: var(--bg); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232B2B2B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/><path d='M13 13l6 6'/></svg>") 4 4, auto; }
         a, button { cursor: inherit; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 4px; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 4px; }
 
-        nav {
-            position: fixed; top: 0; width: 100%;
-            background: rgba(247, 244, 237, 0.95);
-            backdrop-filter: blur(8px);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1.2rem 3rem; z-index: 100;
-            border-bottom: 2px solid var(--border);
-        }
+        nav { position: fixed; top: 0; width: 100%; background: rgba(247, 244, 237, 0.95); backdrop-filter: blur(8px); display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 3rem; z-index: 100; border-bottom: 2px solid var(--border); }
         .nav-logo { font-family: 'VT323', monospace; font-size: 1.8rem; color: var(--text-primary); text-decoration: none; letter-spacing: 1px; }
         .nav-links { display: flex; gap: 2rem; list-style: none; }
         .nav-links a { font-family: 'VT323', monospace; font-size: 1.4rem; color: var(--text-primary); text-decoration: none; transition: color 0.2s ease; }
@@ -294,7 +269,15 @@
             if (reelLoaded) return;
             reelLoaded = true;
             mainReelStatus.innerText = "▶ PLAYING";
-            mainReelContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/2DD3PbJbc-w?autoplay=1&mute=1&loop=1&playlist=2DD3PbJbc-w&controls=1&rel=0&modestbranding=1" title="Parit Katre Demo Reel" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
+            // Clean, standard embed URL
+            const iframe = document.createElement('iframe');
+            iframe.src = "https://www.youtube.com/embed/2DD3PbJbc-w?autoplay=1&mute=1";
+            iframe.title = "Parit Katre Demo Reel";
+            iframe.frameBorder = "0";
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.allowFullscreen = true;
+            mainReelContainer.innerHTML = '';
+            mainReelContainer.appendChild(iframe);
         }
 
         mainReelContainer.addEventListener('mouseenter', () => { hoverTimer = setTimeout(loadMainReel, 1200); });
