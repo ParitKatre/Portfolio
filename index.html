@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parit Katre | Gameplay Animator</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #F7F4ED; /* Cozy warm cream */
+            --surface: #FFFFFF;
+            --text-primary: #2B2B2B;
+            --text-secondary: #6B6B6B;
+            --border: #2B2B2B;
+            --accent: #E07A5F; /* Cozy terracotta orange */
+            --accent-light: #F2A68E;
+            --shadow: rgba(43, 43, 43, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232B2B2B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/><path d='M13 13l6 6'/></svg>") 4 4, auto;
+        }
+
+        a, button { cursor: inherit; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 4px; }
+
+        /* Navbar */
+        nav {
+            position: fixed; top: 0; width: 100%;
+            background: rgba(247, 244, 237, 0.9);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 3rem; z-index: 100;
+            border-bottom: 2px solid var(--border);
+        }
+        .nav-logo {
+            font-family: 'VT323', monospace;
+            font-size: 1.8rem; font-weight: 400;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a {
+            font-family: 'VT323', monospace;
+            font-size: 1.4rem; color: var(--text-primary);
+            text-decoration: none; transition: color 0.2s ease;
+        }
+        .nav-links a:hover { color: var(--accent); }
+
+        /* Hero */
+        #hero {
+            min-height: 90vh;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 6rem 3rem 4rem 3rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .hero-tag {
+            display: inline-block; padding: 6px 12px;
+            background: var(--accent); color: #fff;
+            font-family: 'VT323', monospace; font-size: 1.2rem;
+            margin-bottom: 2rem; border-radius: 4px;
+            border: 2px solid var(--border);
+            box-shadow: 4px 4px 0px var(--border);
+        }
+        #hero h1 {
+            font-family: 'VT323', monospace;
+            font-size: clamp(3.5rem, 9vw, 7rem);
+            font-weight: 400; line-height: 0.9;
+            margin-bottom: 1.5rem; color: var(--text-primary);
+        }
+        #hero h1 span { color: var(--accent); }
+        #hero p {
+            font-size: 1.3rem; line-height: 1.6; color: var(--text-secondary);
+            max-width: 600px; margin-bottom: 2.5rem;
+        }
+        .hero-cta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .btn {
+            padding: 10px 24px; font-family: 'VT323', monospace; font-size: 1.4rem;
+            text-decoration: none; color: var(--text-primary);
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: 4px; box-shadow: 4px 4px 0px var(--border);
+            transition: all 0.15s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn:hover {
+            background: var(--accent); color: #fff;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--border);
+        }
+
+        /* General Layout */
+        main { padding: 2rem 3rem 6rem 3rem; max-width: 1200px; margin: 0 auto; }
+        .section-header { margin-bottom: 3rem; display: flex; align-items: baseline; gap: 1rem; }
+        .section-label {
+            font-family: 'VT323', monospace; font-size: 1.5rem;
+            color: var(--accent); border-bottom: 2px solid var(--accent);
+            padding-bottom: 4px;
+        }
+        .section-title {
+            font-family: 'VT323', monospace; font-size: 2.5rem; color: var(--text-primary);
+        }
+
+        /* Video Container (Retro Box Style) */
+        .retro-box {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 8px 8px 0px var(--border);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+        .retro-box-header {
+            background: var(--text-primary); color: #fff;
+            padding: 8px 16px;
+            font-family: 'VT323', monospace; font-size: 1.2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .retro-box-header span:last-child {
+            background: var(--accent); padding: 2px 8px; border-radius: 2px;
+        }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* Projects Grid (3 Items) */
+        .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .project-card {
+            position: relative; overflow: hidden; border: 2px solid var(--border);
+            border-radius: 8px; box-shadow: 6px 6px 0px var(--border); background: var(--surface);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex; flex-direction: column;
+        }
+        .project-card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px var(--border); }
+        
+        .project-thumb-wrapper { position: relative; height: 160px; overflow: hidden; }
+        .project-thumb { width: 100%; height: 100%; object-fit: cover; filter: grayscale(80%) contrast(1.1); transition: filter 0.3s; display: block; }
+        .project-card:hover .project-thumb { filter: grayscale(0%); }
+        
+        .play-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'VT323', monospace; color: #fff; font-size: 2.5rem;
+            background: rgba(43, 43, 43, 0.5); opacity: 0; transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .project-card:hover .play-overlay { opacity: 1; }
+        
+        .nda-placeholder {
+            width: 100%; height: 100%; background: #2B2B2B;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'VT323', monospace; color: #F2A68E; font-size: 1.5rem;
+            text-align: center; line-height: 1.4; opacity: 0.8;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .project-card .retro-box-header { border-top: 2px solid var(--border); border-radius: 0; }
+        .project-info { padding: 1rem 1.2rem; flex-grow: 1; }
+        .project-info h4 { font-family: 'VT323', monospace; font-size: 1.4rem; color: var(--text-primary); margin-bottom: 4px; }
+        .project-info p { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; }
+        
+        /* Pop-out Video Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(43, 43, 43, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: flex-start; /* Fixes top clipping */
+            z-index: 1000; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 5vh 2rem; /* Adds space from top */
+            overflow-y: auto; /* Allows overlay to scroll cleanly */
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            width: 100%; max-width: 900px;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Pop */
+            margin-bottom: 5vh; /* Space at the bottom when scrolling */
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        
+        .modal-close-btn {
+            background: var(--accent); border: none; color: #fff;
+            padding: 2px 8px; font-family: 'VT323', monospace; font-size: 1.2rem;
+            border-radius: 2px; cursor: pointer;
+        }
+        .modal-close-btn:hover { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+
+        .modal-details {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-top: 0;
+            box-shadow: 8px 8px 0px var(--border);
+            padding: 2rem;
+        }
+        .modal-details h3 { font-family: 'VT323', monospace; font-size: 2rem; color: var(--accent); margin-bottom: 1rem; }
+        .modal-details p { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; }
+        .modal-details h5 { font-family: 'VT323', monospace; font-size: 1.4rem; color: var(--text-primary); margin-bottom: 0.5rem; border-bottom: 1px dashed var(--text-secondary); display: inline-block; }
+        .modal-details ul { padding-left: 1.5rem; margin-bottom: 1.5rem; }
+        .modal-details li { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+
+        /* Experience & Education (Retro Log Style) */
+        .timeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .timeline-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 6px 6px 0px var(--border);
+            padding: 2rem;
+        }
+        .timeline-card h3 {
+            font-family: 'VT323', monospace; font-size: 1.8rem; color: var(--accent);
+            border-bottom: 2px dashed var(--text-secondary);
+            padding-bottom: 0.5rem; margin-bottom: 1.5rem;
+        }
+        .timeline-item { margin-bottom: 1.5rem; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-date { font-family: 'VT323', monospace; font-size: 1.2rem; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+        .timeline-role { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+        .timeline-company { font-family: 'VT323', monospace; font-size: 1.4rem; color: var(--accent); text-decoration: none; display: block; margin-bottom: 8px; }
+        .timeline-desc { font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary); }
+        .cgpa-badge { display: inline-block; margin-top: 12px; background: var(--text-primary); color: #fff; padding: 4px 12px; border-radius: 4px; font-family: 'VT323', monospace; font-size: 1.2rem; border: 2px solid var(--border); }
+
+        /* Contact */
+        #contact {
+            margin-top: 6rem; padding-top: 3rem;
+            border-top: 2px dashed var(--text-secondary);
+            text-align: center;
+        }
+        .contact-title {
+            font-family: 'VT323', monospace; font-size: 3.5rem;
+            margin-bottom: 1rem; color: var(--text-primary);
+        }
+        .contact-subtitle {
+            font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 3rem;
+        }
+        .contact-grid {
+            display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+        }
+        .footer-copy {
+            font-family: 'VT323', monospace; font-size: 1.2rem; color: var(--text-secondary);
+            margin-top: 5rem; border-top: 2px solid var(--border); padding-top: 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .projects-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            nav { padding: 1rem 1.5rem; }
+            .nav-links { gap: 1rem; }
+            #hero { padding: 5rem 1.5rem 2rem 1.5rem; }
+            main { padding: 2rem 1.5rem 4rem 1.5rem; }
+            .projects-grid, .timeline-grid { grid-template-columns: 1fr; }
+            .footer-copy { flex-direction: column; gap: 1rem; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#hero" class="nav-logo">Parit Katre ©</a>
+        <ul class="nav-links">
+            <li><a href="#reel">Reel</a></li>
+            <li><a href="#work">Projects</a></li>
+            <li><a href="#journey">Journey</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header id="hero">
+        <span class="hero-tag">Available for Hire • India</span>
+        <h1>GAMEPLAY<br><span>ANIMATOR</span></h1>
+        <p>Specializing in Unreal Engine 5 and Maya. Building responsive, personality-driven character animation for cozy and action games. Focused on clean locomotion, combat, and seamless implementation.</p>
+        <div class="hero-cta">
+            <a href="#reel" class="btn">▶ View Demo Reel</a>
+            <a href="#work" class="btn">↓ See Projects</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Main Demo Reel -->
+        <section id="reel">
+            <div class="section-header">
+                <span class="section-label">(01)</span>
+                <h2 class="section-title">Demo Reel 2026</h2>
+            </div>
+            
+            <div class="retro-box">
+                <div class="retro-box-header">
+                    <span>REEL_2026.mp4</span>
+                    <span>▶ PLAYING</span>
+                </div>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/u4G1n1Ygrr0?autoplay=1&amp;mute=1&amp;loop=1&amp;playlist=u4G1n1Ygrr0&amp;controls=1&amp;rel=0&amp;modestbranding=1" title="Parit Katre Demo Reel" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3 UE Projects -->
+        <section id="work">
+            <div class="section-header">
+                <span class="section-label">(02)</span>
+                <h2 class="section-title">UE Projects</h2>
+            </div>
+            
+            <div class="projects-grid">
+                <!-- Project 1: UE5 Study -->
+                <div class="project-card" onclick="playVideo('P_01_UE5_STUDY', 'https://www.youtube.com/embed/H4kDCfgiZHs?autoplay=1&amp;mute=0&amp;loop=1&amp;playlist=H4kDCfgiZHs', 'p1')">
+                    <div class="project-thumb-wrapper">
+                        <img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&amp;w=600&amp;auto=format&amp;fit=crop" class="project-thumb" alt="UE5 Study Anim">
+                        <div class="play-overlay">▶ PLAY</div>
+                    </div>
+                    <div class="retro-box-header">
+                        <span>P_01_UE5_STUDY</span>
+                        <span>UE5</span>
+                    </div>
+                    <div class="project-info">
+                        <h4>UE5 Gameplay Study</h4>
+                        <p>A study project focused on UE5 implementation. Hand-keyed combos and dodges from Maya to Unreal Engine 5.6.</p>
+                    </div>
+                </div>
+
+                <!-- Project 2: Unannounced Collab (Image Removed / NDA Placeholder Added) -->
+                <div class="project-card" onclick="playVideo('P_02_COLLAB', 'https://www.youtube.com/embed/ULo1OTUkXEo?autoplay=1&amp;mute=0&amp;loop=1&amp;playlist=ULo1OTUkXEo', 'p2')">
+                    <div class="project-thumb-wrapper">
+                        <div class="nda-placeholder">NDA<br>UNDER WRAPS</div>
+                        <div class="play-overlay">▶ PLAY</div>
+                    </div>
+                    <div class="retro-box-header">
+                        <span>P_02_COLLAB</span>
+                        <span>UE5</span>
+                    </div>
+                    <div class="project-info">
+                        <h4>Unannounced Collab</h4>
+                        <p>An unannounced collaborative gameplay animation project. (Details under NDA).</p>
+                    </div>
+                </div>
+
+                <!-- Project 3: Elf Girl Magic RPG -->
+                <div class="project-card" onclick="playVideo('P_03_ELF_RPG', 'https://www.youtube.com/embed/yjz_WsWtipE?autoplay=1&amp;mute=0&amp;loop=1&amp;playlist=yjz_WsWtipE', 'p3')">
+                    <div class="project-thumb-wrapper">
+                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&amp;w=600&amp;auto=format&amp;fit=crop" class="project-thumb" alt="Elf Girl RPG Anim">
+                        <div class="play-overlay">▶ PLAY</div>
+                    </div>
+                    <div class="retro-box-header">
+                        <span>P_03_ELF_RPG</span>
+                        <span>WIP</span>
+                    </div>
+                    <div class="project-info">
+                        <h4>Elf Girl Magic RPG</h4>
+                        <p>A WIP light RPG project featuring an elf girl. Highly stylized (8/8) with kawaii physics for cloth.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience & Education -->
+        <section id="journey">
+            <div class="section-header">
+                <span class="section-label">(03)</span>
+                <h2 class="section-title">Experience & Education</h2>
+            </div>
+            
+            <div class="timeline-grid">
+                <div class="timeline-card">
+                    <h3>📜 Experience</h3>
+                    <div class="timeline-item">
+                        <span class="timeline-date">APR 2026 - JUN 2026</span>
+                        <div class="timeline-role">Gameplay Animation Intern</div>
+                        <a href="https://www.linkedin.com/company/ardra-studios/" class="timeline-company" target="_blank" rel="noopener noreferrer">Ardra Studios</a>
+                        <p class="timeline-desc">Developed and refined gameplay animations using Maya and Unreal Engine 5 based on team feedback. Worked under the lead animator to create and polish animations for an unannounced game project.</p>
+                    </div>
+                </div>
+                <div class="timeline-card">
+                    <h3>🎓 Education</h3>
+                    <div class="timeline-item">
+                        <span class="timeline-date">GRADUATED 2026</span>
+                        <div class="timeline-role">Bachelor of Visual Arts</div>
+                        <a href="https://www.linkedin.com/school/asian-institute-of-design-aid/" class="timeline-company" target="_blank" rel="noopener noreferrer">Asian Institute of Design</a>
+                        <p class="timeline-desc">Specialized in 3D Animation with a foundation in 2D Animation, 3D Modeling, and Game Art. Experienced with Maya, UE5, Blender, and 3ds Max.</p>
+                        <span class="cgpa-badge">CGPA: 8.35</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <footer id="contact">
+            <h2 class="contact-title">Let's Make Something Move.</h2>
+            <p class="contact-subtitle">Have a project in mind or just want to say hi? Drop me an email.</p>
+            <div class="contact-grid">
+                <a href="mailto:paritkatre11@gmail.com" class="btn">✉ Email Me</a>
+                <a href="https://www.linkedin.com/in/parit-katre-390772229/" target="_blank" rel="noopener noreferrer" class="btn">in LinkedIn</a>
+                <a href="https://vimeo.com/user222804158" target="_blank" rel="noopener noreferrer" class="btn">▶ Vimeo</a>
+            </div>
+            <div class="footer-copy">
+                <span>© 2026 PARIT KATRE</span>
+                <span>INDIA</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Pop-out Video Modal -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="retro-box" style="margin-bottom: 0; box-shadow: none;">
+                <div class="retro-box-header">
+                    <span id="modal-video-title">VIDEO.mp4</span>
+                    <button class="modal-close-btn" onclick="closeModal()">[ X ]</button>
+                </div>
+                <div class="video-container">
+                    <iframe id="modal-video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div id="modal-details" class="modal-details">
+                <!-- Details injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const projectDetails = {
+            p1: {
+                title: "UE5 Gameplay Study & Implementation",
+                p: "This project was a deep dive into Unreal Engine 5 and gameplay animation implementation. I focused on hand-keying dynamic combo attacks and dodges, bringing them from Maya into Unreal Engine 5.6 to understand the full pipeline and implementation process.",
+                h5: "Process & Focus",
+                ul: [
+                    "Animated hand-keyed combos and dodges with a focus on weight and responsiveness.",
+                    "Exported and imported animations cleanly from Maya to Unreal Engine 5.6.",
+                    "Implemented animation blueprints and state machines to drive gameplay logic."
+                ]
+            },
+            p2: {
+                title: "Unannounced Collaborative Project",
+                p: "An unannounced collaborative gameplay animation project. Worked closely with a team to create and refine high-quality character animations for an upcoming title. Specific gameplay and narrative details are currently under NDA.",
+                h5: "Project Scope",
+                ul: [
+                    "Collaborated with lead animators and designers to match the project's visual style.",
+                    "Created and polished gameplay animations based on iterative feedback.",
+                    "Worked within an established animation pipeline to meet production standards."
+                ]
+            },
+            p3: {
+                title: "Elf Girl Magic RPG (WIP)",
+                p: "A work-in-progress light RPG project featuring a magic-wielding elf girl. The animation style is highly stylized (8/8), focusing heavily on character personality, movement traits, and the use of a 'kawaii physics engine' for cloth dynamics.",
+                h5: "Development Plan & Style",
+                ul: [
+                    "Project planning and reference gathering phase (2/3 month overview).",
+                    "Developed a comprehensive Animation Style Sheet for the elf girl character.",
+                    "Implementing kawaii physics for stylized cloth animation and magical effects."
+                ]
+            }
+        };
+
+        function playVideo(title, url, detailKey) {
+            document.getElementById('modal-video-title').innerText = title + ".mp4";
+            document.getElementById('modal-video-frame').src = url;
+            
+            const data = projectDetails[detailKey];
+            const detailsHTML = `
+                <h3>${data.title}</h3>
+                <p>${data.p}</p>
+                <h5>${data.h5}</h5>
+                <ul>${data.ul.map(item => `<li>${item}</li>`).join('')}</ul>
+            `;
+            document.getElementById('modal-details').innerHTML = detailsHTML;
+            
+            document.getElementById('modal-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('modal-video-frame').src = ''; 
+            document.body.style.overflow = 'auto';
+        }
+
+        // Smooth fade-in on scroll for sections
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('section, footer').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
