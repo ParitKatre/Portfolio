@@ -280,12 +280,12 @@
         mainReelContainer.addEventListener('click', () => { clearTimeout(hoverTimer); loadMainReel(); });
 
         const projectDetails = {
-            p1: { title: "UE5 Gameplay Study & Implementation", p: "This project was a deep dive into Unreal Engine 5 and gameplay animation implementation. I focused on hand-keying dynamic combo attacks and dodges, bringing them from Maya into Unreal Engine 5.6 to understand the full pipeline and implementation process.", h5: "Process & Focus", ul: ["Animated hand-keyed combos and dodges with a focus on weight and responsiveness.","Exported and imported animations cleanly from Maya to Unreal Engine 5.6.","Implemented animation blueprints and state machines to drive gameplay logic."] },
-            p2: { title: "Unannounced Collaborative Project", p: "An unannounced collaborative gameplay animation project. Worked closely with a team to create and refine high-quality character animations for an upcoming title. Specific gameplay and narrative details are currently under NDA.", h5: "Project Scope", ul: ["Collaborated with lead animators and designers to match the project's visual style.","Created and polished gameplay animations based on iterative feedback.","Worked within an established animation pipeline to meet production standards."] },
+            p1: { title: "UE5 Gameplay Study & Implementation ", p: "This project was a deep dive into Unreal Engine 5 and gameplay animation implementation. I focused on hand-keying dynamic combo attacks and dodges, bringing them from Maya into Unreal Engine 5.6 to understand the full pipeline and implementation process.", h5: "Process & Focus", ul: ["Animated hand-keyed combos and dodges with a focus on weight and responsiveness.","Exported and imported animations cleanly from Maya to Unreal Engine 5.6.","Implemented animation blueprints and state machines to drive gameplay logic."] },
+            p2: { title: "Unannounced Collaborative Project", p: "An unannounced collaborative gameplay animation project. Worked closely with a team to create and refine high-quality character animations for an Collab Project .", h5: "Project Scope", ul: ["Collaborated with lead and Mid Level animators to match the project's visual style.","Created and polished gameplay animations based on iterative feedback.","Worked within an established animation pipeline to meet production standards."] },
             p3: { title: "Elf Girl Magic RPG (WIP)", p: "A work-in-progress light RPG project featuring a magic-wielding elf girl. The animation style is highly stylized (8/8), focusing heavily on character personality, movement traits, and the use of a 'kawaii physics engine' for cloth dynamics.", h5: "Development Plan & Style", ul: ["Project planning and reference gathering phase (2/3 month overview).","Developed a comprehensive Animation Style Sheet for the elf girl character.","Implementing kawaii physics for stylized cloth animation and magical effects."] }
         };
 
-        function playVideo(title, url, detailKey) {
+        function playVideo(title, url, detailKey) { 
             document.getElementById('modal-video-title').innerText = title + ".mp4";
             document.getElementById('modal-video-frame').src = url;
             const data = projectDetails[detailKey];
@@ -293,11 +293,11 @@
             document.getElementById('modal-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-
-        function closeModal() {
+                                  
+        function closeModal() {          
             document.getElementById('modal-overlay').classList.remove('active');
             document.getElementById('modal-video-frame').src = ''; 
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = 'auto';           
         }
 
         const observer = new IntersectionObserver((entries) => {
